@@ -98,3 +98,13 @@ POST /api/guess (404): Assert that a non-existent ID returns a 404 status.
 Please ensure all test functions are async and use the AsyncClient from httpx."
 **AI Generation:** Claude generated a test_main.py file with async fixtures, database mocking, and test cases covering randomization, case-sensitivity, and error handling.
 **Manual Modifications:** Verified that the test assertions strictly align with the normalized string comparison logic (strip/lower) and the specific feedback messages defined in the requirements.
+
+10.
+**Tool:** Gemini
+**Prompt:** "I want to write the README.md file, what else do you recommend it will include except: tech stack, setup instructions, tests(how to run), AI usage."
+**AI Generation:** Suggested README structure.
+
+11. 
+**Tool:** Claude Code
+**Prompt:** "Write a professional README.md for the 'Guess the Country' full-stack app. Include a project overview, a list of features (async logic, input normalization), and a detailed tech stack (FastAPI, SQLAlchemy/aiosqlite, Vanilla JS). Add an 'Engineering Decisions' section justifying the choice of an asynchronous, stateless REST API and an in-memory testing database. Provide an API reference, clear local setup instructions using venv and Uvicorn, and pytest execution steps. Maintain an academic tone, omit any deployment details, and include a link to the AI_USAGE.md file."
+**AI Generation:** Generated README file
