@@ -2,19 +2,19 @@ AI Usage Documentation
 
 This document describes how AI tools were used during the development of the "Guess the Country" application.
 
-AI Tools Used
+AI Tools Used:
+* Gemini (Google): Used as a Senior Fullstack Mentor for project planning, architectural decisions, learning backend concepts (Async, FastAPI), and refining requirements.
 
-Gemini (Google): Used as a Senior Fullstack Mentor for project planning, architectural decisions, learning backend concepts (Async, FastAPI), and refining requirements.
+* Claude Code (Anthropic): Used as the primary development tool within VS Code for generating boilerplate code, managing Git configurations, and implementing the database and API logic.
 
-Claude Code (Anthropic): Used as the primary development tool within VS Code for generating boilerplate code, managing Git configurations, and implementing the database and API logic.
+AI Configuration:
+File: .claude.md
+Rules & Constraints Created: 1. Asynchronous Architecture: Mandated the use of async/await and aiosqlite for all database operations to ensure non-blocking I/O.
+2. Stateless Design: Required challenge verification using country IDs to keep the backend stateless.
+3. Minimalist UI: Restricted the frontend to Vanilla HTML/JS/CSS to avoid over-engineering with heavy frameworks.
+How it helped: These rules ensured that both AI tools stayed aligned with the project's specific technical constraints. It prevented the AI from suggesting bloated solutions and enforced high-performance asynchronous patterns from the very first line of code.
 
-AI Configuration
-
-File: .claude.md (or equivalent)
-
-Purpose: Guided the AI to follow a specific stack: Python (FastAPI), SQLite (aiosqlite), and Vanilla JS. It ensured the AI prioritized clean, asynchronous code and "Engineering Thinking."
-
-Development Log
+Development Log:
 
 1. Planning & Architecture
 **Tool:** Gemini
@@ -79,3 +79,22 @@ UX & Reset:
 Support submitting the guess by pressing the 'Enter' key. Clear the input field after each guess. 'New Game' should reset the UI and fetch a new country. Please use modern CSS (Flexbox/Grid) and async/await for all fetch calls."
 **AI Generation:** Claude generated a single-file index.html using modern CSS and async JavaScript. It implemented the fetch-based game logic (load/guess), and provided the FastAPI configuration for serving static files.
 **Manual Modifications:** Refined main.py and index.html to use a consistent {"message": "..."} JSON structure. Implemented state-dependent button disabling; the "Submit" button now remains inactive until a country is loaded and input is provided, preventing invalid API calls. Changinh the dimensions for better visibility at 100% zoom. Configured CORS middleware and Static Files mounting in FastAPI.
+
+8.
+**Tool:** Gemini
+**Prompt:** "The backend and frontend is ready. I want to add automated tests using pytest. Please provide a plan to test my endpoints, focusing on edge cases like non-existent IDs and input normalization."
+**AI Generation:** The AI provided a detailed test strategy using pytest and httpx.AsyncClient. It recommended covering success scenarios (200 OK) for both endpoints and error handling (404 Not Found) for invalid IDs.
+
+9.
+**Tool:** Claude Code
+**Prompt:** "I need to create a test_main.py file to test my FastAPI application.
+Setup: Use pytest and httpx (AsyncClient). Configure an in-memory SQLite database (sqlite+aiosqlite:///:memory:) specifically for the test session so it doesn't touch my production data.
+Create a fixture to seed the in-memory DB with a few test countries (e.g., Japan and Brazil) before running tests. Test Cases:
+GET /api/country/random: Assert it returns a 200 status and 3 clues.
+POST /api/guess (Success): Assert that 'japan' (lowercase) is 'Correct!' for the Japan ID.
+POST /api/guess (Failure): Assert that 'USA' is 'Wrong' for the Japan ID and provides the correct answer.
+POST /api/guess (Case/Space): Assert that '  BRAZIL  ' is 'Correct!' for the Brazil ID.
+POST /api/guess (404): Assert that a non-existent ID returns a 404 status.
+Please ensure all test functions are async and use the AsyncClient from httpx."
+**AI Generation:** Claude generated a test_main.py file with async fixtures, database mocking, and test cases covering randomization, case-sensitivity, and error handling.
+**Manual Modifications:** Verified that the test assertions strictly align with the normalized string comparison logic (strip/lower) and the specific feedback messages defined in the requirements.

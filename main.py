@@ -1,12 +1,14 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from typing import AsyncGenerator
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 from database import SessionLocal, init_db, get_random_country, get_country_by_id
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 @asynccontextmanager
-# Lifespan Handles startup logic 
+# Lifespan Handles startup logic
 # Initialize the DB and seed data once when the server starts
 async def lifespan(app: FastAPI):
     await init_db()
@@ -19,10 +21,15 @@ app = FastAPI(lifespan=lifespan)
 # Allows all origins for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Dependency that provides a database session for each request
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with SessionLocal() as session:
+        yield session
 
 # Defines the API contract
 # Only returns id and clues to keep the country name hidden from the client
@@ -33,9 +40,8 @@ class CountryResponse(BaseModel):
 # GET endpoint to fetch a random challenge
 # Uses an async database session to avoid blocking the event loop
 @app.get("/api/country/random", response_model=CountryResponse)
-async def random_country():
-    async with SessionLocal() as session:
-        country = await get_random_country(session)
+async def random_country(session: AsyncSession = Depends(get_db)):
+    country = await get_random_country(session)
 
     if country is None:
         raise HTTPException(status_code=404, detail="No countries found.")
@@ -53,9 +59,8 @@ class GuessRequest(BaseModel):
 # POST endpoint to validate the user's guess against the stored country name
 # Comparison is case-insensitive and strips leading/trailing whitespace
 @app.post("/api/guess")
-async def submit_guess(body: GuessRequest):
-    async with SessionLocal() as session:
-        country = await get_country_by_id(session, body.country_id)
+async def submit_guess(body: GuessRequest, session: AsyncSession = Depends(get_db)):
+    country = await get_country_by_id(session, body.country_id)
 
     if country is None:
         raise HTTPException(status_code=404, detail="Country not found.")
