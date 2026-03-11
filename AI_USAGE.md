@@ -107,4 +107,23 @@ Please ensure all test functions are async and use the AsyncClient from httpx."
 11. 
 **Tool:** Claude Code
 **Prompt:** "Write a professional README.md for the 'Guess the Country' full-stack app. Include a project overview, a list of features (async logic, input normalization), and a detailed tech stack (FastAPI, SQLAlchemy/aiosqlite, Vanilla JS). Add an 'Engineering Decisions' section justifying the choice of an asynchronous, stateless REST API and an in-memory testing database. Provide an API reference, clear local setup instructions using venv and Uvicorn, and pytest execution steps. Maintain an academic tone, omit any deployment details, and include a link to the AI_USAGE.md file."
-**AI Generation:** Generated README file
+**AI Generation:** Generated README file.
+**Manual Modifications:** I prepared the requirements.txt to include production dependencies.
+
+12.
+**Tool:** Gemini
+**Prompt:** "My 'Guess the Country' app is fully functional and tested. Tech Stack: FastAPI, SQLite (aiosqlite/SQLAlchemy), and Vanilla JS. I want to deploy the app to a free-tier platform like Render. Please advise on:
+How to handle the SQLite database file on that platform?
+What production-ready server I should use and how to configure it.
+Provide a concise prompt for Claude Code to generate any necessary configuration files (like render.yaml or a Procfile)."
+**AI Generation:** Proposed a "Self-healing" architecture: leveraging the existing lifespan event to automatically recreate and re-seed the SQLite database on Render's ephemeral storage upon every restart. Provided the production command: uvicorn main:app --host 0.0.0.0 --port $PORT.
+
+13.
+**Tool:** Claude Code
+**Prompt:** "I am preparing my 'Guess the Country' FastAPI application for deployment on Render's free tier. Please generate a render.yaml file with the following specifications:
+Type: web service.
+Environment: Python.
+Build Command: pip install -r requirements.txt.
+Start Command: uvicorn main:app --host 0.0.0.0 --port $PORT.
+**AI Generation:** Generated the render.yaml. Claude validated the use of the $PORT environment variable.
+
