@@ -87,7 +87,10 @@ cd guess-the-country
 ```bash
 python -m venv venv
 
-# Windows
+# Windows (PowerShell):
+.\venv\Scripts\Activate.ps1
+
+# Windows (Command Prompt):
 venv\Scripts\activate
 
 # macOS / Linux
