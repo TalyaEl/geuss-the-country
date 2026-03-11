@@ -2,10 +2,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from database import SessionLocal, init_db, get_random_country, get_country_by_id
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 @asynccontextmanager
-# Lifespan Handles startup logic. 
-# Initialize the DB and seed data once when the server starts.
+# Lifespan Handles startup logic 
+# Initialize the DB and seed data once when the server starts
 async def lifespan(app: FastAPI):
     await init_db()
     yield
@@ -13,14 +15,23 @@ async def lifespan(app: FastAPI):
 # Initialize FastAPI
 app = FastAPI(lifespan=lifespan)
 
-# Defines the API contract.
-# Only returns id and clues to keep the country name hidden from the client.
+# Allows the browser to communicate with the server
+# Allows all origins for development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Defines the API contract
+# Only returns id and clues to keep the country name hidden from the client
 class CountryResponse(BaseModel):
     id: int
     clues: list[str]
 
-# GET endpoint to fetch a random challenge.
-# Uses an async database session to avoid blocking the event loop.
+# GET endpoint to fetch a random challenge
+# Uses an async database session to avoid blocking the event loop
 @app.get("/api/country/random", response_model=CountryResponse)
 async def random_country():
     async with SessionLocal() as session:
@@ -51,5 +62,9 @@ async def submit_guess(body: GuessRequest):
 
     is_correct = body.guess.strip().lower() == country.name.lower()
     if is_correct:
-        return {"Correct!"}
-    return {f"Wrong. The correct answer is {country.name}."}
+        return {"message": "Correct!"}
+    return {"message": f"Wrong. The correct answer is {country.name}."}
+
+# Ensure 'index.html' is in the same directory as main
+# Serve the index.html file when visiting the root URL
+app.mount("/", StaticFiles(directory=".", html=True), name="static")

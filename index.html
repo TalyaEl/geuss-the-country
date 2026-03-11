@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guess the Country</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f0f4f8;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #1a202c;
+      padding: 40px 20px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 28px;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.1);
+      padding: 4rem 4rem;
+      width: min(750px, 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      transition: all 0.3s ease;
+    }
+
+    h1 {
+      font-size: 3.2rem;
+      font-weight: 800;
+      text-align: center;
+      color: #2d3748;
+      letter-spacing: -2px;
+      margin-bottom: 0;
+    }
+
+    .clues {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .clue {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+      background: #f8fafc;
+      border-left: 10px solid #4299e1;
+      border-radius: 0 20px 20px 0;
+      padding: 1.5rem 2rem;
+      font-size: 1.5rem;
+      line-height: 1.6;
+      color: #4a5568;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    .clue-number {
+      font-weight: 800;
+      color: #4299e1;
+      flex-shrink: 0;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 1.25rem;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 1.25rem 1.75rem;
+      border: 3px solid #e2e8f0;
+      border-radius: 16px;
+      font-size: 1.5rem;
+      outline: none;
+      transition: all 0.2s;
+      color: #2d3748;
+      background: #fff;
+    }
+
+    input[type="text"]:focus {
+      border-color: #4299e1;
+      box-shadow: 0 0 0 5px rgba(66, 153, 225, 0.15);
+    }
+
+    button {
+      padding: 1.25rem 2.5rem;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.4rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    /* כפתור מנוטרל - אפור וברור */
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: #cbd5e0 !important;
+      color: #718096 !important;
+      box-shadow: none !important;
+    }
+
+    #submit-btn {
+      background: #4299e1;
+      color: #fff;
+    }
+
+    #submit-btn:hover:not(:disabled) {
+      background: #3182ce;
+      box-shadow: 0 6px 20px rgba(66, 153, 225, 0.4);
+    }
+
+    #new-game-btn {
+      width: 100%;
+      background: #edf2f7;
+      color: #4a5568;
+      font-size: 1.4rem;
+      padding: 1.25rem;
+    }
+
+    #new-game-btn:hover:not(:disabled) {
+      background: #e2e8f0;
+    }
+
+    #feedback {
+      min-height: 3.5rem;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 800;
+      border-radius: 16px;
+      padding: 1rem;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+    }
+
+    #feedback.correct {
+      color: #22543d;
+      background: #f0fff4;
+      border: 2px solid #c6f6d5;
+      visibility: visible;
+    }
+
+    #feedback.wrong {
+      color: #9b2c2c;
+      background: #fff5f5;
+      border: 2px solid #fed7d7;
+      visibility: visible;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Guess the Country</h1>
+
+    <div class="clues" id="clues-container">
+      <div class="clue"><span class="clue-number">1.</span><span>Loading clues…</span></div>
+      <div class="clue"><span class="clue-number">2.</span><span></span></div>
+      <div class="clue"><span class="clue-number">3.</span><span></span></div>
+    </div>
+
+    <div class="input-row">
+      <input type="text" id="guess-input" placeholder="Enter country name…" autocomplete="off" />
+      <button id="submit-btn" disabled>Submit</button>
+    </div>
+
+    <div id="feedback"></div>
+
+    <button id="new-game-btn">New Game</button>
+  </div>
+
+  <script>
+    const cluesContainer = document.getElementById('clues-container');
+    const guessInput     = document.getElementById('guess-input');
+    const submitBtn      = document.getElementById('submit-btn');
+    const newGameBtn     = document.getElementById('new-game-btn');
+    const feedback       = document.getElementById('feedback');
+
+    let currentCountryId = null;
+
+    // ניהול מצב כפתור ההגשה בנפרד כדי להבטיח שהוא מופעל רק כשיש ID
+    function updateSubmitButtonState() {
+      submitBtn.disabled = (currentCountryId === null || guessInput.value.trim() === '');
+    }
+
+    function setLoading(isLoading) {
+      // בזמן טעינה, הכל מנוטרל
+      if (isLoading) {
+        submitBtn.disabled = true;
+        newGameBtn.disabled = true;
+        guessInput.disabled = true;
+      } else {
+        // בסיום טעינה, רק כפתור "משחק חדש" והקלט חוזרים. Submit תלוי ב-ID
+        newGameBtn.disabled = false;
+        guessInput.disabled = false;
+        updateSubmitButtonState();
+      }
+    }
+
+    function renderClues(clues) {
+      cluesContainer.innerHTML = clues
+        .map((clue, i) => `
+          <div class="clue">
+            <span class="clue-number">${i + 1}.</span>
+            <span>${clue}</span>
+          </div>`)
+        .join('');
+    }
+
+    function showFeedback(message) {
+      const isCorrect = message.includes('Correct');
+      feedback.textContent = message;
+      feedback.className   = isCorrect ? 'correct' : 'wrong';
+    }
+
+    function resetFeedback() {
+      feedback.textContent = '';
+      feedback.className   = '';
+    }
+
+    async function loadNewCountry() {
+      currentCountryId = null; // איפוס ה-ID מיד כדי לנטרל את כפתור ה-Submit
+      setLoading(true);
+      resetFeedback();
+      guessInput.value = '';
+
+      try {
+        const res  = await fetch('/api/country/random');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        currentCountryId = data.id; // השמת ה-ID החדש
+        renderClues(data.clues);
+      } catch {
+        renderClues(['Error connecting to server. Please check your backend.', '', '']);
+      } finally {
+        setLoading(false); // כאן כפתור ה-Submit יישאר disabled אם ה-ID עדיין null
+        guessInput.focus();
+      }
+    }
+
+    async function submitGuess() {
+      const guess = guessInput.value.trim();
+      if (!guess || currentCountryId === null) return;
+
+      setLoading(true);
+
+      try {
+        const res  = await fetch('/api/guess', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ country_id: currentCountryId, guess }),
+        });
+        const data = await res.json();
+        showFeedback(data.message);
+        if (data.message.includes('Correct')) {
+            guessInput.value = ''; 
+        }
+      } catch {
+        showFeedback('Network error. Please try again.');
+      } finally {
+        setLoading(false);
+        guessInput.focus();
+      }
+    }
+
+    submitBtn.addEventListener('click', submitGuess);
+    newGameBtn.addEventListener('click', loadNewCountry);
+    
+    // האזנה להקלדה כדי להפעיל/לנטרל את כפתור ה-Submit בזמן אמת
+    guessInput.addEventListener('input', updateSubmitButtonState);
+    
+    guessInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !submitBtn.disabled) submitGuess();
+    });
+
+    loadNewCountry();
+  </script>
+</body>
+</html>
