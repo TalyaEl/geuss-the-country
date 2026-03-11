@@ -7,7 +7,7 @@ DATABASE_URL = "sqlite+aiosqlite:///./countries.db"
 engine = create_async_engine(DATABASE_URL)
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
-
+# Base class for SQLAlchemy
 class Base(DeclarativeBase):
     pass
 
@@ -73,14 +73,19 @@ async def init_db() -> None:
         await conn.run_sync(Base.metadata.create_all)
 
     async with SessionLocal() as session:
+        # Check if the table is empty to avoid duplicate seeding
         count = await session.scalar(select(func.count()).select_from(Country))
         if count == 0:
             session.add_all(SEED_DATA)
             await session.commit()
 
-
+# Fetches a random country from the database using SQL's random() function
 async def get_random_country(session: AsyncSession) -> Country | None:
     result = await session.scalar(
         select(Country).order_by(func.random()).limit(1)
     )
     return result
+
+# Retrieves a country by its Primary Key(id)
+async def get_country_by_id(session: AsyncSession, country_id: int) -> Country | None:
+    return await session.get(Country, country_id)
