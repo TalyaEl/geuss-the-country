@@ -4,6 +4,12 @@ A stateless full-stack web application where the user is presented with three fa
 
 ---
 
+## Live Demo
+The application is deployed and accessible at:
+**[https://guess-the-country-h2bt.onrender.com](https://guess-the-country-h2bt.onrender.com)**
+
+---
+
 ## Features
 
 - **Random challenge on every game** — a new country with 3 clues is fetched from the database on load and on reset

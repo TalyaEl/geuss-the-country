@@ -125,5 +125,5 @@ Type: web service.
 Environment: Python.
 Build Command: pip install -r requirements.txt.
 Start Command: uvicorn main:app --host 0.0.0.0 --port $PORT.
-**AI Generation:** Generated the render.yaml. Claude validated the use of the $PORT environment variable.
-
+**AI Generation:** Generated the render.yaml. Claude validated the use of the $PORT environment variable and confirmed that all four required production dependencies (fastapi, uvicorn, sqlalchemy, aiosqlite) were explicitly listed in requirements.txt.
+**Manual Modifications:** Connected the repository to Render, configured the service using the generated render.yaml Blueprint, and triggered the initial deployment.
